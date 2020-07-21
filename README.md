@@ -1,6 +1,21 @@
 # Segmentation images augmentation
 This repository provides tools for augmentation images accompanied by segmentation masks. 
 
+![Sample](https://github.com/NesterukSergey/segmentation_image_augmentation/blob/master/data/examples/no_noise.png)
+
+![Sample](https://github.com/NesterukSergey/segmentation_image_augmentation/blob/master/data/examples/noise.png)
+
+It provides easy ways to:
+* Modify target image and segmentation mask simultaniously
+* Add background
+* Move, flip and rotate object
+* Add noise (salt, pepper, Gauss)
+* Smooth image
+* Apply perspective transform
+
+## Usage
+You can find examples at [Demos.ipynb](https://github.com/NesterukSergey/segmentation_image_augmentation/blob/master/Demos.ipynb)
+
 
 ## Dataset
 
