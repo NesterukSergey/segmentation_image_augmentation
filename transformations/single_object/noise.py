@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 
 
 def add_salt(img, p):
@@ -23,3 +24,7 @@ def gauss_noise(img, var):
     gauss = (np.random.normal(0, var**0.5, img.shape) * 255).astype('uint8')
     img = img + gauss
     return np.clip(img, 0, 255)
+
+
+def smooth(img, kernel_size):
+    return cv2.GaussianBlur(img,(kernel_size, kernel_size),0)

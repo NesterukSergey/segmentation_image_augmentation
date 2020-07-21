@@ -6,3 +6,4 @@ from transformations.single_object.perspective_transform import perspective_tran
 from transformations.single_object.embed_pair import embed_pair
 from transformations.single_object.get_background import get_background
 from transformations.single_object.noise import *
+from transformations.single_object.mask2bbox import mask2bbox
