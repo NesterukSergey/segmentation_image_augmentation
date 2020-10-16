@@ -10,6 +10,6 @@ def pil2np(img):
     np_img = np.asarray(img)
 
     if np_img.max() <= 1:
-        return (np_img * 255).astype(int)
+        return (np_img * 255).astype('uint8')
     else:
         return np_img
