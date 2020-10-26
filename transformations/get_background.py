@@ -1,5 +1,4 @@
-import numpy as np
-from transformations.single_object.resize import resize
+from transformations import resize
 
 
 def get_background(back, scene_shape, added_width):

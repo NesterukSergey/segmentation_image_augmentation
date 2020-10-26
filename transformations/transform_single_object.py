@@ -1,6 +1,4 @@
-import numpy as np
-from utils import *
-from transformations.single_object import *
+from transformations import *
 
 
 def transform_single_object(img, mask,
@@ -20,7 +18,7 @@ def transform_single_object(img, mask,
         output_size_mode (str): the rule to define output size.
             'fixed' to set size manually, requires output_size.
             'multiplier' to set relation between input and output size, requires output_scale.
-        output_size (list): defines [height, width] of ouptut image if output_size_mode is 'fixed'.
+        output_size (list): defines [height, width] of output image if output_size_mode is 'fixed'.
         output_scale: sets the scale of output size based on input size if output_size_mode is 'multiplier'.
             (float): Multiplier for both axes. Should be >= 1.
             (tuple): Multipliers for separate axis. Both should be >= 1.
