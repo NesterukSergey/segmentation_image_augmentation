@@ -133,6 +133,7 @@ class Augmentor(ABC):
             else:
                 self._call_buffer['scene'] = resize(background_image, self._call_buffer['scene_size'])
 
+    @abstractmethod
     def _transform_masks(self):
         pass
 
@@ -141,13 +142,18 @@ class Augmentor(ABC):
             self._call_buffer['img_list'][i] = format_image(self._call_buffer['img_list'][i])
             self._call_buffer['mask_list'][i] = format_image(self._call_buffer['mask_list'][i])
 
+    @abstractmethod
+    def _add_main_masks(self):
+        pass
+
     def _embed_pairs(self):
         for i in range(len(self._call_buffer['img_list'])):
-            self._call_buffer['scene'], self._call_buffer['mask'] = embed_pair(
+            self._call_buffer['scene'], self._call_buffer['main_masks'] = embed_pair(
                 self._call_buffer['img_list'][i],
                 self._call_buffer['mask_list'][i],
                 self._call_buffer['scene'],
-                self._call_buffer['mask'],
+                self._call_buffer['small_masks'][i],
+                self._call_buffer['main_masks'],
                 self._call_buffer['added_width'],
                 self._call_buffer['objects_positions'][i]
             )
@@ -158,6 +164,7 @@ class Augmentor(ABC):
         self._call_buffer['img_list'], self._call_buffer['mask_list'] = self._check_input(img_list, mask_list)
 
         self._transform_pairs()
+        self._transform_masks()
 
         self._call_buffer['real_img_sizes'] = [[img.shape[0], img.shape[1]] for img in self._call_buffer['img_list']]
         self._call_buffer['shrink_img_sizes'] = [
@@ -169,15 +176,17 @@ class Augmentor(ABC):
         self._get_scene_size()
         self._get_scene()
 
-        self._call_buffer['mask'] = np.zeros_like(self._call_buffer['scene'])
+        self._add_main_masks()
 
         self._embed_pairs()
 
         if self.persp_trans > 0:
             self._call_buffer['scene'] = perspective_transform(
                 self._call_buffer['scene'], self._call_buffer['added_width'])
-            self._call_buffer['mask'] = perspective_transform(
-                self._call_buffer['mask'], self._call_buffer['added_width'])
+
+            for mask in self._call_buffer['main_masks']:
+                self._call_buffer['main_masks'][mask] = perspective_transform(
+                    self._call_buffer['main_masks'][mask], self._call_buffer['added_width'])
 
         self._call_buffer['scene'] = add_salt(self._call_buffer['scene'], self.salt)
         self._call_buffer['scene'] = add_pepper(self._call_buffer['scene'], self.pepper)

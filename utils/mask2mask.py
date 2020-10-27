@@ -25,9 +25,11 @@ def semantic2binary_list(mask):
     return masks
 
 
-def binary_list2semantic(mask_list):
+def binary_list2semantic(mask_list, colors=None):
     main_mask = np.zeros_like(mask_list[0])
-    colors = generate_colors(len(mask_list))
+
+    if colors is None:
+        colors = generate_colors(len(mask_list))
 
     for i, mask in enumerate(mask_list):
         main_mask[:, :, :3][mask[:, :, 0] > 0] = colors[i]
@@ -35,3 +37,7 @@ def binary_list2semantic(mask_list):
     return main_mask.astype('uint8')
 
 
+def color_mask(mask, color):
+    m = (mask[:, :, 0] > 0) | (mask[:, :, 1] > 0) | (mask[:, :, 2] > 0)
+    mask[m] = color
+    return mask
