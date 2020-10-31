@@ -1,15 +1,14 @@
 import numpy as np
 from PIL import Image
 
+from utils.format_image import format_image
+
 
 def np2pil(img):
-    return Image.fromarray((img * 255).astype('uint8'))
+    i = img.copy()
+    return Image.fromarray(format_image(i))
 
 
 def pil2np(img):
     np_img = np.asarray(img)
-
-    if np_img.max() <= 1:
-        return (np_img * 255).astype('uint8')
-    else:
-        return np_img
+    return format_image(np_img)

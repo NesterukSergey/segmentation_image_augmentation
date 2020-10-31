@@ -1,4 +1,10 @@
+from utils.mask2mask import semantic2binary
+
+
 def mask2bbox(mask):
+
+    mask = semantic2binary(mask)
+
     horizontal = mask.sum(axis=0)
     vertical = mask.sum(axis=1)
     x_min, x_max, y_min, y_max = None, None, None, None

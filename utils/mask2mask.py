@@ -1,9 +1,10 @@
 import numpy as np
 from utils.colors import generate_colors
+from utils.format_image import format_image
 
 
 def semantic2binary(mask):
-    return (mask > 0).max(axis=2).astype('uint8') * 255
+    return format_image((mask > 0).max(axis=2))
 
 
 def single2multi(mask):
@@ -20,7 +21,7 @@ def semantic2binary_list(mask):
 
     masks = []
     for i in range(colors_count):
-        masks.append((mask == masks_colors[i]).reshape(mask.shape).astype('uint8') * 255)
+        masks.append(format_image((mask == masks_colors[i]).reshape(mask.shape)))
 
     return masks
 
@@ -34,10 +35,11 @@ def binary_list2semantic(mask_list, colors=None):
     for i, mask in enumerate(mask_list):
         main_mask[:, :, :3][mask[:, :, 0] > 0] = colors[i]
 
-    return main_mask.astype('uint8')
+    return format_image(main_mask)
 
 
 def color_mask(mask, color):
     m = (mask[:, :, 0] > 0) | (mask[:, :, 1] > 0) | (mask[:, :, 2] > 0)
-    mask[m] = color
-    return mask
+    new_mask = mask.copy()
+    new_mask[m] = color
+    return format_image(new_mask)

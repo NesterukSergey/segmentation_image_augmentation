@@ -1,4 +1,4 @@
-from utils.show import show
+from utils.show import *
 from utils.read import read
 from utils.pil import pil2np, np2pil
 from utils.colors import generate_colors

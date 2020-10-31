@@ -1,4 +1,3 @@
-import random
 from abc import ABC, abstractmethod
 
 from utils import *
@@ -14,21 +13,26 @@ class Augmentor(ABC):
         self.persp_trans = params.get('persp_trans', 0)
         self.background = params.get('background', 'none')
         self.background_image_list = params.get('background_image_list', None)
+        self.flip_prob = params.get('flip_prob', 0)
+        self.max_rotate_degree = params.get('max_rotate_degree', 0)
         self.salt = params.get('salt', 0)
         self.pepper = params.get('pepper', 0)
         self.gauss_var = params.get('gauss_var', 0)
         self.smooth_kernel_size = params.get('smooth_kernel_size', 1)
+        self.bboxes = params.get('bboxes', False)
+        self.num_classes = params.get('num_classes', 0)
 
         """
         single       - single-channel mask, shows object presence
         multi-object - multi-channel mask, separate color for each object (for each plant)
         multi-part   - multi-channel mask, separate color for each object part (for each leaf)
         semantic     - multi-channel mask, separate color for each type of object (leaf, root, flower)
+        class        - multi-channel mask, separate color for each class (plant variety)
         """
         self.possible_inp2out = {
-            'single': ['single', 'multi-object'],
-            'multi-part': ['single', 'multi-object', 'multi-part'],
-            'semantic': ['single', 'multi-object', 'semantic']
+            'single': ['single', 'multi-object', 'class'],
+            'multi-part': ['single', 'multi-object', 'multi-part', 'class'],
+            'semantic': ['single', 'multi-object', 'semantic', 'class']
         }
 
         self.input_type = self.get_input_type()
@@ -49,11 +53,17 @@ class Augmentor(ABC):
                 raise UserWarning('{} output type is not supported for {} input type. See {} for the details'.format(
                     output_type, self.input_type, self.possible_inp2out))
 
+        if 'class' in self.output_type_list:
+            assert self.num_classes > 0
+
         if not (0 <= self.overlap_ratio <= 1):
             raise UserWarning('Wrong overlap_ratio value')
 
         if self.persp_trans < 0:
             raise UserWarning('persp_trans must be >= 0')
+
+        if (self.persp_trans > 0.2) and (self.bboxes):
+            raise UserWarning('Bounding box is not supported for strong perspective transform yet')
 
         if self.background not in ['img', 'none']:
             raise UserWarning('background type is not supported')
@@ -79,7 +89,7 @@ class Augmentor(ABC):
         if (self.smooth_kernel_size < 1) or (self.smooth_kernel_size % 2 == 0):
             raise UserWarning('Wrong value')
 
-    def _check_input(self, img_list, mask_list):
+    def _check_input(self, img_list, mask_list, class_list=None):
         assert len(img_list) == len(mask_list)
 
         for i in range(len(img_list)):
@@ -91,7 +101,11 @@ class Augmentor(ABC):
 
             check_is_image(mask_list[i])
 
-        return img_list, mask_list
+        if 'class' in self.output_type_list:
+            assert class_list is not None
+            assert len(class_list) == len(img_list)
+
+        return img_list, mask_list, class_list
 
     def _get_scene_size(self):
         objects_height_ends = [
@@ -123,7 +137,7 @@ class Augmentor(ABC):
         if self.background == 'none':
             self._call_buffer['scene'] = np.zeros((*self._call_buffer['scene_size'], 3))
         elif self.background == 'img':
-            background_image = random.choice(self.background_image_list)
+            background_image = random.choice(self.background_image_list).copy()
 
             background_image = self._transform_background(background_image)
 
@@ -142,6 +156,14 @@ class Augmentor(ABC):
             self._call_buffer['img_list'][i] = format_image(self._call_buffer['img_list'][i])
             self._call_buffer['mask_list'][i] = format_image(self._call_buffer['mask_list'][i])
 
+            self._call_buffer['img_list'][i], self._call_buffer['mask_list'][i] = rotate_pair(
+                self._call_buffer['img_list'][i], self._call_buffer['mask_list'][i], self.max_rotate_degree
+            )
+
+            self._call_buffer['img_list'][i], self._call_buffer['mask_list'][i] = flip_pair(
+                self._call_buffer['img_list'][i], self._call_buffer['mask_list'][i], self.flip_prob
+            )
+
     @abstractmethod
     def _add_main_masks(self):
         pass
@@ -158,10 +180,48 @@ class Augmentor(ABC):
                 self._call_buffer['objects_positions'][i]
             )
 
-    def transform(self, img_list, mask_list):
-        self._call_buffer = {}
+    def _embed_bbox(self, bbox, start):
+        (x_min, y_max), (_, y_min), (x_max, _), (_, _), (_, _) = bbox
+        h = start[0]
+        w = start[1]
 
-        self._call_buffer['img_list'], self._call_buffer['mask_list'] = self._check_input(img_list, mask_list)
+        x_min += w
+        x_max += w
+        y_min += h
+        y_max += h
+
+        return (x_min, y_max), (x_min, y_min), (x_max, y_min), (x_max, y_max), (x_min, y_max)
+
+    def _get_bboxes(self):
+        if self.bboxes:
+
+            if 'multi-object' in self.output_type_list:
+                mo_bboxes = []
+                for obj in self._call_buffer['small_masks']:
+                    mo_bboxes.append(mask2bbox(obj['multi-object']))
+
+                self._call_buffer['bboxes']['multi-object'] = [self._embed_bbox(
+                    mo_bboxes[i], self._call_buffer['objects_positions'][i])
+                    for i in range(len(mo_bboxes))]
+
+                if self.persp_trans > 0:
+                    self._call_buffer['bboxes']['multi-object'] = [bbox_perspective_transform(
+                        np.array([bbox], np.float32),
+                        self._call_buffer['added_width'],
+                        [self._call_buffer['scene'].shape[0],
+                         self._call_buffer['scene'].shape[1] + self._call_buffer['added_width']])
+                        for bbox in self._call_buffer['bboxes']['multi-object']]
+
+    def transform(self, i_list, m_list, class_list=None):
+        img_list = [i.copy() for i in i_list]
+        mask_list = [m.copy() for m in m_list]
+
+        self._call_buffer = {
+            'bboxes': {}
+        }
+
+        self._call_buffer['img_list'], self._call_buffer['mask_list'], self._call_buffer[
+            'class_list'] = self._check_input(img_list, mask_list, class_list)
 
         self._transform_pairs()
         self._transform_masks()
@@ -192,5 +252,7 @@ class Augmentor(ABC):
         self._call_buffer['scene'] = add_pepper(self._call_buffer['scene'], self.pepper)
         self._call_buffer['scene'] = gauss_noise(self._call_buffer['scene'], self.gauss_var)
         self._call_buffer['scene'] = smooth(self._call_buffer['scene'], self.smooth_kernel_size)
+
+        self._get_bboxes()
 
         return self._call_buffer

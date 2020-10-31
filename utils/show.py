@@ -41,3 +41,24 @@ def show(img, bbox=None):
             plt.imshow(img)
 
         plt.show()
+
+
+def show_line(images, bboxes=None):
+
+    if bboxes is None:
+        bboxes = ([None] * len(images))
+
+    fig, ax = plt.subplots(1, len(images), figsize=(18, 10 * len(images)))
+
+    for i in range(len(images)):
+        ax[i].set_xticks([])
+        ax[i].set_yticks([])
+
+        ax[i].imshow(images[i])
+
+        if bboxes[i] is not None:
+            for bbox in bboxes[i]:
+                for p in range(4):
+                    ax[i].plot([bbox[p][0], bbox[p + 1][0]], [bbox[p][1], bbox[p + 1][1]], 'r')
+
+    plt.show()
