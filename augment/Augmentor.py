@@ -164,9 +164,11 @@ class Augmentor(ABC):
                 self._call_buffer['img_list'][i], self._call_buffer['mask_list'][i], self.flip_prob
             )
 
-    @abstractmethod
     def _add_main_masks(self):
-        pass
+        self._call_buffer['main_masks'] = {}
+
+        for mask in self.output_type_list:
+            self._call_buffer['main_masks'][mask] = np.zeros_like(self._call_buffer['scene'])
 
     def _embed_pairs(self):
         for i in range(len(self._call_buffer['img_list'])):
@@ -212,7 +214,7 @@ class Augmentor(ABC):
                          self._call_buffer['scene'].shape[1] + self._call_buffer['added_width']])
                         for bbox in self._call_buffer['bboxes']['multi-object']]
 
-    def transform(self, i_list, m_list, class_list=None):
+    def _transform_pipeline(self, i_list, m_list, class_list=None):
         img_list = [i.copy() for i in i_list]
         mask_list = [m.copy() for m in m_list]
 
@@ -256,3 +258,16 @@ class Augmentor(ABC):
         self._get_bboxes()
 
         return self._call_buffer
+
+    def transform(self, img_list, mask_list, class_list=None):
+        call_buffer = self._transform_pipeline(img_list, mask_list, class_list)
+
+        result = {'scene': call_buffer['scene'], 'masks': {}}
+
+        if self.bboxes:
+            result['bboxes'] = self._call_buffer['bboxes']
+
+        for mask in self.output_type_list:
+            result['masks'][mask] = call_buffer['main_masks'][mask]
+
+        return result

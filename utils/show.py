@@ -62,3 +62,27 @@ def show_line(images, bboxes=None):
                     ax[i].plot([bbox[p][0], bbox[p + 1][0]], [bbox[p][1], bbox[p + 1][1]], 'r')
 
     plt.show()
+
+
+def show_transforms(result, show_bbox=True):
+    masks_count = len(result['masks'].keys())
+    fig, ax = plt.subplots(1, masks_count + 1, figsize=(20, 25))
+
+    ax[0].set_xticks([])
+    ax[0].set_yticks([])
+    ax[0].set_title('Scene')
+    ax[0].imshow(result['scene'])
+
+    if show_bbox and 'bboxes' in result:
+        if 'multi-object' in result['bboxes']:
+            for bbox in result['bboxes']['multi-object']:
+                for p in range(4):
+                    ax[0].plot([bbox[p][0], bbox[p + 1][0]], [bbox[p][1], bbox[p + 1][1]], 'r')
+
+    for i, mask_type in enumerate(result['masks'].keys()):
+        ax[i + 1].set_xticks([])
+        ax[i + 1].set_yticks([])
+        ax[i + 1].set_title(mask_type.capitalize() + ' Mask')
+        ax[i + 1].imshow(result['masks'][mask_type])
+
+    plt.show()

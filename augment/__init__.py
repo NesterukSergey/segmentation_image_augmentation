@@ -1,2 +1,4 @@
 from augment.Augmentor import Augmentor
-
+from augment.MultiPartAugmentor import MultiPartAugmentor
+from augment.SemanticAugmentor import SemanticAugmentor
+from augment.SingleAugmentor import SingleAugmentor

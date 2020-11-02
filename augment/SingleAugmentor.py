@@ -2,13 +2,13 @@ from augment.Augmentor import Augmentor
 from utils import *
 
 
-class MultiPartAugmentor(Augmentor):
+class SingleAugmentor(Augmentor):
 
     def __init__(self, params):
         super().__init__(params)
 
     def get_input_type(self):
-        return 'multi-part'
+        return 'single'
 
     def _transform_masks(self):
         self._call_buffer['small_masks'] = []
@@ -16,17 +16,6 @@ class MultiPartAugmentor(Augmentor):
 
         if 'class' in self.output_type_list:
             class_colors = generate_colors(self.num_classes + 1)
-
-        if 'multi-part' in self.output_type_list:
-            objects = []
-            total_parts = 0
-
-            for i, mask in enumerate(self._call_buffer['mask_list']):
-                obj = semantic2binary_list(mask)
-                total_parts += len(obj)
-                objects.append(obj)
-
-            parts_colors = generate_colors(total_parts)
 
         for i, mask in enumerate(self._call_buffer['mask_list']):
             m = {}
@@ -36,10 +25,6 @@ class MultiPartAugmentor(Augmentor):
 
             if 'multi-object' in self.output_type_list:
                 m['multi-object'] = color_mask(mask, object_colors[i])
-
-            if 'multi-part' in self.output_type_list:
-                obj_colors = [parts_colors.pop(0) for i in range(len(objects[i]))]
-                m['multi-part'] = binary_list2semantic(objects[i], obj_colors)
 
             if 'class' in self.output_type_list:
                 m['class'] = color_mask(mask, class_colors[self._call_buffer['class_list'][i]])
