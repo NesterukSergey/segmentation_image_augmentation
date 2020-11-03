@@ -13,8 +13,8 @@ class Augmentor(ABC):
         self.persp_trans = params.get('persp_trans', 0)
         self.background = params.get('background', 'none')
         self.background_image_list = params.get('background_image_list', None)
-        self.flip_prob = params.get('flip_prob', 0)
-        self.max_rotate_degree = params.get('max_rotate_degree', 0)
+        self.flip_prob = params.get('flip_prob', 0.5)
+        self.max_rotate_degree = params.get('max_rotate_degree', 30)
         self.salt = params.get('salt', 0)
         self.pepper = params.get('pepper', 0)
         self.gauss_var = params.get('gauss_var', 0)
@@ -85,7 +85,7 @@ class Augmentor(ABC):
                 check_is_image(img)
             except:
                 try:
-                    print('reading image')
+                    # print('reading image')
                     self.background_image_list[i] = read(img)
                 except:
                     raise UserWarning('Cannot read an image')
