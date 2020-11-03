@@ -22,6 +22,8 @@ class Augmentor(ABC):
         self.bboxes = params.get('bboxes', False)
         self.num_classes = params.get('num_classes', 0)
 
+        self.max_background_images = 20
+
         """
         single       - single-channel mask, shows object presence
         multi-object - multi-channel mask, separate color for each object (for each plant)
@@ -74,8 +76,19 @@ class Augmentor(ABC):
         if (self.background == 'img') and (len(self.background_image_list) == 0):
             raise UserWarning('background_image_list should be non-empty')
 
-        for i in self.background_image_list:
-            check_is_image(i)
+        if (self.background == 'img') and (len(self.background_image_list) > self.max_background_images):
+            self.background_image_list = self.background_image_list[:self.max_background_images]
+            print('Too many background images ({}). Some will be ignored'.format(len(self.background_image_list)))
+
+        for i, img in enumerate(self.background_image_list):
+            try:
+                check_is_image(img)
+            except:
+                try:
+                    print('reading image')
+                    self.background_image_list[i] = read(img)
+                except:
+                    raise UserWarning('Cannot read an image')
 
         if self.salt < 0:
             raise UserWarning('Wrong value')
