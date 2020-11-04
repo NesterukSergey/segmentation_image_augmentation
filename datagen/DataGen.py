@@ -11,7 +11,7 @@ class DataGen:
     def __init__(self, input_path, input_type,
                  img_prefix='rgb', mask_prefix='label',
                  augmentor_params=None, class_mapping=None,
-                 balance=True, scene_samples=1, separable_class=False):
+                 balance=False, separable_class=False):
 
         self.input_path = input_path
         self.input_type = input_type
@@ -20,7 +20,6 @@ class DataGen:
         self.mask_prefix = mask_prefix
         self.class_mapping = class_mapping
         self.balance = balance
-        self.scene_samples = scene_samples
         self.separable_class = separable_class
 
         self._get_classes()
@@ -40,6 +39,8 @@ class DataGen:
             raise UserWarning('Unrecognized input type: {}'.format(self.input_type))
         else:
             self.augmentor = augmentor_types[self.input_type](self.augmentor_params)
+
+        self.output_type_list = self.augmentor.output_type_list
 
     def _get_classes(self):
         self.classes = next(os.walk(self.input_path))[1]
@@ -115,19 +116,19 @@ class DataGen:
 
         return read(img), read(mask), self.class2num[class_name]
 
-    def get_scene(self):
+    def get_scene(self, scene_samples=1):
         images = []
         masks = []
         classes = []
 
         class_name = self._choose_class() if self.separable_class else None
 
-        for i in range(self.scene_samples):
+        for i in range(scene_samples):
             img, msk, cl = self._get_next_input_pair(class_name)
             images.append(img)
             masks.append(msk)
             classes.append(cl)
 
-        transformed_scene = self.augmentor.transform(images, masks)
+        transformed_scene = self.augmentor.transform(images, masks, classes)
 
         return transformed_scene, classes
