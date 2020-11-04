@@ -21,6 +21,8 @@ class Augmentor(ABC):
         self.smooth_kernel_size = params.get('smooth_kernel_size', 1)
         self.bboxes = params.get('bboxes', False)
         self.num_classes = params.get('num_classes', 0)
+        self.adjust_mask = params.get('adjust_mask', True)
+        self.pad_mask = params.get('pad_mask', 25)
 
         self.max_background_images = 20
 
@@ -176,6 +178,15 @@ class Augmentor(ABC):
             self._call_buffer['img_list'][i], self._call_buffer['mask_list'][i] = flip_pair(
                 self._call_buffer['img_list'][i], self._call_buffer['mask_list'][i], self.flip_prob
             )
+
+            if self.adjust_mask:
+                [(x_min, y_max), (_, y_min), (x_max, _), (x_max, _), (_, _)] = mask2bbox(self._call_buffer['mask_list'][i])
+                self._call_buffer['img_list'][i] = self._call_buffer['img_list'][i][y_min:y_max, x_min:x_max, :]
+                self._call_buffer['mask_list'][i] = self._call_buffer['mask_list'][i][y_min:y_max, x_min:x_max, :]
+
+                if self.pad_mask > 0:
+                    self._call_buffer['img_list'][i] = pad(self._call_buffer['img_list'][i], self.pad_mask)
+                    self._call_buffer['mask_list'][i] = pad(self._call_buffer['mask_list'][i], self.pad_mask)
 
     def _add_main_masks(self):
         self._call_buffer['main_masks'] = {}

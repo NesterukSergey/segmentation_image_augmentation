@@ -8,3 +8,4 @@ from utils.get_data_list import get_img_mask_list, get_images_list
 from utils.pack_images import get_pack_coords
 from utils.check_is_image import check_is_image
 from utils.format_image import format_image
+from utils.pad import pad

@@ -11,7 +11,7 @@ class DataGen:
     def __init__(self, input_path, input_type,
                  img_prefix='rgb', mask_prefix='label',
                  augmentor_params=None, class_mapping=None,
-                 balance=True, scene_samples=1):
+                 balance=True, scene_samples=1, separable_class=False):
 
         self.input_path = input_path
         self.input_type = input_type
@@ -21,6 +21,7 @@ class DataGen:
         self.class_mapping = class_mapping
         self.balance = balance
         self.scene_samples = scene_samples
+        self.separable_class = separable_class
 
         self._get_classes()
         self.set_class_mappings()
@@ -101,9 +102,12 @@ class DataGen:
         else:
             self.class_weights = [1 / self.num_classes] * self.num_classes
 
+    def _choose_class(self):
+        return random.choices(self.classes, weights=self.class_weights, k=1)[0]
+
     def _get_next_input_pair(self, class_name=None):
         if class_name is None:
-            class_name = random.choices(self.classes, weights=self.class_weights, k=1)[0]
+            class_name = self._choose_class()
 
         sample_num = random.randint(0, len(self.input_pairs[class_name]['images']) - 1)
         img = self.input_pairs[class_name]['images'][sample_num]
@@ -116,8 +120,10 @@ class DataGen:
         masks = []
         classes = []
 
+        class_name = self._choose_class() if self.separable_class else None
+
         for i in range(self.scene_samples):
-            img, msk, cl = self._get_next_input_pair()
+            img, msk, cl = self._get_next_input_pair(class_name)
             images.append(img)
             masks.append(msk)
             classes.append(cl)
