@@ -66,7 +66,8 @@ def show_line(images, bboxes=None):
 
 def show_transforms(result, show_bbox=True):
     masks_count = len(result['masks'].keys())
-    fig, ax = plt.subplots(1, masks_count + 1, figsize=(20, 25))
+    fig, ax = plt.subplots(1, masks_count + 1, figsize=(28, 12))
+    # fig, ax = plt.subplots(1, masks_count + 1, figsize=(10, 5))
 
     ax[0].set_xticks([])
     ax[0].set_yticks([])
@@ -86,3 +87,4 @@ def show_transforms(result, show_bbox=True):
         ax[i + 1].imshow(result['masks'][mask_type])
 
     plt.show()
+    # fig.savefig('test.png', dpi=1000)

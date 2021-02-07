@@ -123,6 +123,7 @@ class DataGen:
 
         class_name = self._choose_class() if self.separable_class else None
 
+
         for i in range(scene_samples):
             img, msk, cl = self._get_next_input_pair(class_name)
             images.append(img)

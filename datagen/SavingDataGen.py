@@ -54,9 +54,17 @@ class SavingDataGen(DataGen):
         except:
             sample_num = 1
 
-        for sample in range(num_samples):
+        total_time = 0
+        load_time = 0
+        transform_time = 0
+        streaming_time = 0
+        avg_h = []
+        avg_w = []
 
+        for sample in range(num_samples):
             transformed_scene, classes = self.get_scene(scene_samples)
+            avg_h.append(transformed_scene['scene'].shape[0])
+            avg_w.append(transformed_scene['scene'].shape[1])
 
             samples_per_class_num = dict(Counter(classes))
             for input_class in range(self.num_classes):
@@ -124,3 +132,5 @@ class SavingDataGen(DataGen):
 
             write_csv(pd.DataFrame(sample_data, index=[0]), data_file)
             sample_num += 1
+
+        return (total_time, load_time, transform_time, streaming_time), (sum(avg_h) / len(avg_h), sum(avg_w) / len(avg_w))

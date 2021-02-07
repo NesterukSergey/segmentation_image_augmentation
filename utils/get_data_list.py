@@ -9,7 +9,9 @@ def get_img_mask_list(img_path, mask_path=None, img_prefix='rgb', mask_prefix='l
                       f.split('.')[-1].lower() in ['jpg', 'jpeg', 'png']]
 
         images = [f for f in files_path if img_prefix in f]
-        masks = [f for f in [f.replace(img_prefix, mask_prefix) for f in images] if f in files_path]
+        masks = [f for f in
+                 [f.replace(img_prefix, mask_prefix).replace('.jpg', '.png').replace('.jpeg', '.png') for f in images]
+                 if f in files_path]
 
     else:
         files_path = list_files(img_path)
@@ -21,7 +23,9 @@ def get_img_mask_list(img_path, mask_path=None, img_prefix='rgb', mask_prefix='l
                            f.split('.')[-1].lower() in ['jpg', 'jpeg', 'png']]
 
         images = [f for f in files_path if img_prefix in f]
-        masks = [f for f in [f.replace(img_prefix, mask_prefix) for f in images] if f in mask_files_path]
+        masks = [f for f in
+                 [f.replace(img_prefix, mask_prefix).replace('.jpg', '.png').replace('.jpeg', '.png') for f in images]
+                 if f in mask_files_path]
 
     return images, masks
 

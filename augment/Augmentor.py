@@ -60,7 +60,7 @@ class Augmentor(ABC):
         if 'class' in self.output_type_list:
             assert self.num_classes > 0
 
-        if not (0 <= self.overlap_ratio <= 1):
+        if not (0 <= self.overlap_ratio < 1):
             raise UserWarning('Wrong overlap_ratio value')
 
         if self.persp_trans < 0:
