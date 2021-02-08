@@ -13,3 +13,14 @@ def generate_colors(n):
         colors.append((np.array([*p]) * 255).astype(int))
 
     return colors[1:n + 1]
+
+
+def human2machine_mask(mask, num2class_dict):
+    new_mask = np.zeros((mask.shape[0], mask.shape[1]))
+    colors = generate_colors(len(list(num2class_dict.keys())))
+
+    for i, c in enumerate(num2class_dict.keys()):
+        a = np.any((mask).astype(int) == list(colors[i]), axis=-1)
+        new_mask[a] = int(c)
+
+    return new_mask.astype('int8')
