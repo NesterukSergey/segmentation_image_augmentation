@@ -1,10 +1,8 @@
 
-matplotlib==3.1.3
-numpy==1.17.3
-opencv-python==4.2.0.32
-pandas==1.0.1
-Pillow==6.2.1
-rectpack==0.2.1
-torch==1.3.0
-torchvision==0.4.1
-tqdm==4.44.1
+matplotlib>=3.1.3
+numpy>=1.17.3
+opencv-python>=4.2.0.32
+pandas>=1.0.1
+Pillow>=6.2.1
+rectpack>=0.2.1
+tqdm>=4.44.1
