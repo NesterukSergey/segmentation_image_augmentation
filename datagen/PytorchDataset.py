@@ -24,8 +24,7 @@ class PytorchDataset(Dataset):
         self.mask_transform = mask_transform
 
     def __len__(self):
-        # return len(self.img_list)
-        return self.epoch_size
+        return len(self.img_list)
 
     def __getitem__(self, idx):
         result, classes = self.datagen.get_scene(self.scene_samples)
